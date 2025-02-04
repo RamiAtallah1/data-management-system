@@ -1,0 +1,39 @@
+/venv/
+
+# Backend (Django) specific
+/backend/venv/
+backend/*.pyc
+backend/__pycache__/
+backend/db.sqlite3
+backend/*.log
+backend/*.env
+backend/.env.local
+backend/staticfiles/
+backend/media/
+
+# Frontend (Vue.js) specific
+/frontend/node_modules/
+frontend/dist/
+frontend/*.log
+frontend/.env
+frontend/.env.local
+
+# General
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.log
+*.env
+*.local
+.DS_Store
+
+# Ignore coverage files
+.coverage
+*.coveragerc
+
+# Ignore build artifacts
+build/
+
+# Ignore IDE configuration
+.vscode/
