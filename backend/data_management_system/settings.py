@@ -52,7 +52,7 @@ ROOT_URLCONF = "data_management_system.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "assignment_data_management" / "templates"],
+        "DIRS": [BASE_DIR / "data_management_system" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -67,10 +67,10 @@ TEMPLATES = [
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [
-    BASE_DIR / "assignment_data_management" / "static",
+    BASE_DIR / "data_management_system" / "static",
 ]
 
-WSGI_APPLICATION = "assignment_data_management.wsgi.application"
+WSGI_APPLICATION = "data_management_system.wsgi.application"
 
 # Database settings
 DATABASES = {
