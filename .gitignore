@@ -9,6 +9,7 @@ backend/*.log
 backend/*.env
 backend/.env.local
 backend/staticfiles/
+/backend/data_management_system/static/
 backend/media/
 
 # Frontend (Vue.js) specific
