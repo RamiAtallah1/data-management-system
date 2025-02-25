@@ -42,7 +42,8 @@
 
       <button
         type="submit"
-        class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition-colors w-full sm:w-auto"
+        :disabled="isLoading"
+        class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition-colors w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Create Schema
       </button>
@@ -63,6 +64,7 @@ const message = ref({
   type: "success",
   visible: false,
 });
+const isLoading = ref(false);
 
 const showMessage = (text, type = "success") => {
   message.value = { text, type, visible: true };
@@ -85,6 +87,7 @@ const removeField = (index) => {
 };
 
 const createSchema = async () => {
+  isLoading.value = true;
   try {
     const data = await postSchema(tableName.value, fields.value);
     if (data) {
@@ -96,6 +99,8 @@ const createSchema = async () => {
     }
   } catch (error) {
     console.error(error);
+  } finally {
+    isLoading.value = false;
   }
 };
 

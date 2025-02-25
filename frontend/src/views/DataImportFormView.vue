@@ -18,7 +18,13 @@
           required
         />
       </div>
-      <button type="submit" class="bg-blue-500 text-white p-2 rounded">Import</button>
+      <button
+        type="submit"
+        :disabled="isLoading"
+        class="bg-blue-500 text-white p-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Import
+      </button>
     </form>
   </div>
 </template>
@@ -35,6 +41,8 @@ const message = ref({
   type: "success",
   visible: false,
 });
+const isLoading = ref(false);
+
 const route = useRoute();
 const tableName = route.params.table_name;
 
@@ -51,6 +59,7 @@ const handleFileUpload = (event) => {
 };
 
 const importData = async () => {
+  isLoading.value = true;
   const formData = new FormData();
   formData.append("file", file.value);
 
@@ -63,7 +72,10 @@ const importData = async () => {
       showMessage("Failed to start data import.", "error");
     }
   } catch (error) {
+    showMessage("Failed to start data import.", "error");
     console.error(error);
+  } finally {
+    isLoading.value = false;
   }
 };
 </script>

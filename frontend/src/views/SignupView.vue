@@ -16,7 +16,11 @@
           <label class="block text-gray-700">Password</label>
           <input v-model="password" type="password" class="w-full p-2 border rounded" required />
         </div>
-        <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+        <button
+          type="submit"
+          :disabled="isLoading"
+          class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           Sign Up
         </button>
       </form>
@@ -37,11 +41,12 @@ const name = ref("");
 const email = ref("");
 const password = ref("");
 const errorMessage = ref("");
+const isLoading = ref(false);
 const router = useRouter();
 
 const handleSignUp = async () => {
   errorMessage.value = "";
-
+  isLoading.value = true;
   try {
     const signupData = await signupUser(name.value, email.value, password.value);
 
@@ -63,6 +68,8 @@ const handleSignUp = async () => {
   } catch (error) {
     errorMessage.value = "Network error. Please try again.";
     console.error(error);
+  } finally {
+    isLoading.value = false;
   }
 };
 </script>
