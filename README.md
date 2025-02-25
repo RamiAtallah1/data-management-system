@@ -13,6 +13,7 @@ Before running the project, ensure you have the following installed:
 - PostgreSQL 16
 - Node.js (for Vue.js frontend build)
 - npm (for frontend dependencies)
+- Docker & Docker Compose
 
 ## Setup
 
@@ -72,6 +73,9 @@ EMAIL_HOST_PASSWORD=your-email-password  # Replace with your email password
 # JWT settings
 ACCESS_TOKEN_LIFETIME=30  # Expiry in days for access tokens
 REFRESH_TOKEN_LIFETIME=30  # Expiry in days for refresh tokens
+
+# Celery Configuration
+CELERY_BROKER_URL=redis://localhost:6379/0
 ```
 
 ### 6. Run Migrations
@@ -79,6 +83,7 @@ REFRESH_TOKEN_LIFETIME=30  # Expiry in days for refresh tokens
 To set up the database schema, run the following command:
 
 ```bash
+cd backend
 python manage.py migrate
 ```
 
@@ -91,7 +96,24 @@ cd frontend
 npm run build
 ```
 
-### 10. Run the Development Server
+### 8. Run Celery
+
+#### Start Redis
+
+If Redis is not already running, start it:
+
+```bash
+cd backend
+docker-compose up -d
+```
+
+#### Start Celery Worker
+
+```bash
+celery -A data_management_system worker --loglevel=info
+```
+
+### 9. Run the Development Server
 
 To run the Django development server:
 
@@ -132,5 +154,10 @@ Here’s a breakdown of what to include in your `.env`:
   - `EMAIL_HOST_PASSWORD`: The password for your email account (or app-specific password if using Gmail with 2FA).
 
 - **JWT settings:**
+
   - `ACCESS_TOKEN_LIFETIME`: The lifetime (in days) of access tokens.
   - `REFRESH_TOKEN_LIFETIME`: The lifetime (in days) of refresh tokens.
+
+- **Celery settings:**
+
+  - `CELERY_BROKER_URL`: Redis URL for Celery task queue.

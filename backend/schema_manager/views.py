@@ -9,7 +9,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Schema
 from .serializers import SchemaSerializer
-from .utils import send_import_confirmation, clean_values, read_csv_with_fallback
+from .tasks import send_import_confirmation
+from .utils import clean_values, read_csv_with_fallback
 
 SUPPORTED_FIELD_TYPES = [
     "SERIAL",
@@ -231,7 +232,9 @@ class DataImportView(APIView):
 
             schema_fields = [field["name"] for field in schema.fields]
 
-            if set(df.columns) != set(schema_fields):
+            if {col.lower() for col in df.columns} != {
+                field.lower() for field in schema_fields
+            }:
                 return Response(
                     {
                         "error": f"CSV columns do not match schema fields. Expected: {schema_fields}, Found: {df.columns.tolist()}"
@@ -261,7 +264,7 @@ class DataImportView(APIView):
                             status=status.HTTP_400_BAD_REQUEST,
                         )
 
-            send_import_confirmation(
+            send_import_confirmation.delay(
                 "Data Import Completed",
                 f"The data import for table '{table_name}' has been completed successfully.",
                 email,
