@@ -1,5 +1,3 @@
-import os
-import pandas as pd
 from rest_framework import status, viewsets, filters
 from django.db import connection, transaction
 from rest_framework.permissions import IsAuthenticated
@@ -11,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Schema
 from .serializers import SchemaSerializer
-from .utils import send_import_confirmation
+from .utils import send_import_confirmation, clean_values, read_csv_with_fallback
 
 SUPPORTED_FIELD_TYPES = [
     "SERIAL",
@@ -220,20 +218,11 @@ class DataImportView(APIView):
 
         try:
             try:
-                df = pd.read_csv(file, delimiter="\t")
-                if len(df.columns) == 1:
-                    file.seek(0)
-                    df = pd.read_csv(file, delimiter=",")
-            except Exception as e:
-                return Response(
-                    {"error": f"CSV read error: {str(e)}"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            csv_columns = df.columns.tolist()
+                df = read_csv_with_fallback(file)
+            except ValueError as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
             schema = Schema.objects.filter(table_name=table_name).first()
-
             if not schema:
                 return Response(
                     {"error": f"Table '{table_name}' does not exist in the schema"},
@@ -242,10 +231,10 @@ class DataImportView(APIView):
 
             schema_fields = [field["name"] for field in schema.fields]
 
-            if set(csv_columns) != set(schema_fields):
+            if set(df.columns) != set(schema_fields):
                 return Response(
                     {
-                        "error": f"CSV columns do not match schema fields. Expected: {schema_fields}, Found: {csv_columns}"
+                        "error": f"CSV columns do not match schema fields. Expected: {schema_fields}, Found: {df.columns.tolist()}"
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
@@ -253,30 +242,24 @@ class DataImportView(APIView):
             with transaction.atomic():
                 cursor = connection.cursor()
 
-                for index, row in df.iterrows():
-                    columns = ", ".join(csv_columns)
-                    values = ", ".join(
-                        [
-                            f"'{row[column]}'" if pd.notna(row[column]) else "NULL"
-                            for column in csv_columns
-                        ]
+                for _, row in df.iterrows():
+                    cleaned_values = [
+                        clean_values(row[col], column_name=col) for col in df.columns
+                    ]
+
+                    placeholders = ", ".join(["%s"] * len(df.columns))
+                    columns = ", ".join(df.columns)
+                    sql = (
+                        f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
                     )
 
-                    sql = f"INSERT INTO {table_name} ({columns}) VALUES ({values})"
-
                     try:
-                        cursor.execute(sql)
+                        cursor.execute(sql, cleaned_values)
                     except Exception as e:
                         return Response(
                             {"error": f"SQL error during insert: {str(e)}"},
                             status=status.HTTP_400_BAD_REQUEST,
                         )
-
-            folder_path = "temp"
-            file_path = f"{folder_path}/{file.name}"
-
-            os.makedirs(folder_path, exist_ok=True)
-            df.to_csv(file_path, index=False)
 
             send_import_confirmation(
                 "Data Import Completed",
